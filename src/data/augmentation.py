@@ -137,7 +137,131 @@ def get_strong_augmentation(image_size: int = 224) -> A.Compose:
     ])
 
 
-# TODO: Add medical-specific augmentations
-# - Simulate imaging artifacts
-# - Intensity non-uniformity simulation
-# - MixUp/CutMix implementations
+def mixup_data(x, y, alpha=1.0):
+    """Apply MixUp augmentation.
+
+    MixUp: Beyond Empirical Risk Minimization (Zhang et al., 2017)
+    Combines two samples and their labels using a convex combination.
+
+    Args:
+        x: Batch of images (B, C, H, W)
+        y: Batch of labels (B,)
+        alpha: MixUp interpolation strength (typically 1.0)
+
+    Returns:
+        Tuple of (mixed_x, y_a, y_b, lambda)
+        where mixed_x = lambda * x + (1 - lambda) * x_shuffled
+    """
+    import torch
+
+    if alpha > 0:
+        lam = np.random.beta(alpha, alpha)
+    else:
+        lam = 1
+
+    batch_size = x.size(0)
+    index = torch.randperm(batch_size).to(x.device)
+
+    mixed_x = lam * x + (1 - lam) * x[index, :]
+    y_a, y_b = y, y[index]
+
+    return mixed_x, y_a, y_b, lam
+
+
+def mixup_criterion(criterion, pred, y_a, y_b, lam):
+    """Compute loss for MixUp training.
+
+    Args:
+        criterion: Loss function
+        pred: Model predictions
+        y_a: First set of labels
+        y_b: Second set of labels
+        lam: MixUp lambda
+
+    Returns:
+        Mixed loss
+    """
+    return lam * criterion(pred, y_a) + (1 - lam) * criterion(pred, y_b)
+
+
+def cutmix_data(x, y, alpha=1.0):
+    """Apply CutMix augmentation.
+
+    CutMix: Regularization Strategy to Train Strong Classifiers (Yun et al., 2019)
+    Cuts and pastes patches between images.
+
+    Args:
+        x: Batch of images (B, C, H, W)
+        y: Batch of labels (B,)
+        alpha: CutMix interpolation strength (typically 1.0)
+
+    Returns:
+        Tuple of (mixed_x, y_a, y_b, lambda)
+    """
+    import torch
+
+    if alpha > 0:
+        lam = np.random.beta(alpha, alpha)
+    else:
+        lam = 1
+
+    batch_size = x.size(0)
+    index = torch.randperm(batch_size).to(x.device)
+
+    # Get bounding box
+    bbx1, bby1, bbx2, bby2 = rand_bbox(x.size(), lam)
+
+    # Apply CutMix
+    mixed_x = x.clone()
+    mixed_x[:, :, bbx1:bbx2, bby1:bby2] = x[index, :, bbx1:bbx2, bby1:bby2]
+
+    # Adjust lambda to match pixel ratio
+    lam = 1 - ((bbx2 - bbx1) * (bby2 - bby1) / (x.size()[-1] * x.size()[-2]))
+
+    y_a, y_b = y, y[index]
+
+    return mixed_x, y_a, y_b, lam
+
+
+def rand_bbox(size, lam):
+    """Generate random bounding box for CutMix.
+
+    Args:
+        size: Image size (B, C, H, W)
+        lam: Lambda from beta distribution
+
+    Returns:
+        Tuple of (x1, y1, x2, y2) coordinates
+    """
+    W = size[2]
+    H = size[3]
+    cut_rat = np.sqrt(1. - lam)
+    cut_w = int(W * cut_rat)
+    cut_h = int(H * cut_rat)
+
+    # Uniform sampling of center
+    cx = np.random.randint(W)
+    cy = np.random.randint(H)
+
+    bbx1 = np.clip(cx - cut_w // 2, 0, W)
+    bby1 = np.clip(cy - cut_h // 2, 0, H)
+    bbx2 = np.clip(cx + cut_w // 2, 0, W)
+    bby2 = np.clip(cy + cut_h // 2, 0, H)
+
+    return bbx1, bby1, bbx2, bby2
+
+
+# Medical-specific augmentation helpers
+def simulate_imaging_artifacts(image, artifact_type='motion'):
+    """Simulate common medical imaging artifacts.
+
+    Args:
+        image: Input image (numpy array)
+        artifact_type: Type of artifact ('motion', 'noise', 'bias_field')
+
+    Returns:
+        Image with simulated artifacts
+    """
+    # Placeholder for future implementation
+    # Would include motion blur, field inhomogeneity, etc.
+    return image
