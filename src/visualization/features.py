@@ -2,18 +2,21 @@
 
 import torch
 import numpy as np
+import logging
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import seaborn as sns
 from typing import List, Optional, Tuple
 
+logger = logging.getLogger(__name__)
+
 try:
     import umap
     UMAP_AVAILABLE = True
 except ImportError:
     UMAP_AVAILABLE = False
-    print("Warning: UMAP not available. Install with 'pip install umap-learn'")
+    logger.warning("UMAP not available. Install with 'pip install umap-learn'")
 
 
 def extract_features(
@@ -211,7 +214,7 @@ def plot_embedding(
 
     if save_path:
         plt.savefig(save_path, dpi=150, bbox_inches='tight')
-        print(f"Saved plot to {save_path}")
+        logger.info(f"Saved plot to {save_path}")
     else:
         plt.show()
 
@@ -333,7 +336,7 @@ def plot_feature_distributions(
 
     if save_path:
         plt.savefig(save_path, dpi=150, bbox_inches='tight')
-        print(f"Saved plot to {save_path}")
+        logger.info(f"Saved plot to {save_path}")
     else:
         plt.show()
 

@@ -7,6 +7,9 @@ from pathlib import Path
 from typing import Optional, Callable, Tuple, List
 import json
 from PIL import Image
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class StrokeDataset(Dataset):
@@ -46,8 +49,15 @@ class StrokeDataset(Dataset):
             self._load_from_split_file(split_path)
         else:
             # Fallback: scan directory structure
-            print(f"Warning: Split file {split_file} not found. Scanning directory...")
+            logger.warning(f"Split file {split_file} not found. Scanning directory structure...")
             self._scan_directory()
+
+        # Validate that dataset is not empty
+        if len(self.image_paths) == 0:
+            raise ValueError(
+                f"No valid images found in {self.data_dir} for split '{split}'. "
+                f"Please ensure data directory exists and contains images."
+            )
 
     def _load_from_split_file(self, split_path: Path):
         """Load data paths from split JSON file."""
@@ -101,11 +111,17 @@ class StrokeDataset(Dataset):
         image_path = Path(self.image_paths[idx])
         label = self.labels[idx]
 
-        # Load image
-        if image_path.suffix == '.npy':
-            image = np.load(image_path).astype(np.float32)
-        else:
-            image = np.array(Image.open(image_path).convert('RGB')).astype(np.float32)
+        # Load image with error handling
+        try:
+            if image_path.suffix == '.npy':
+                image = np.load(image_path).astype(np.float32)
+            else:
+                image = np.array(Image.open(image_path).convert('RGB')).astype(np.float32)
+        except Exception as e:
+            logger.error(f"Failed to load image {image_path}: {e}")
+            # Return a blank image as fallback
+            image = np.zeros((224, 224, 3), dtype=np.float32)
+            logger.warning(f"Returning blank image for corrupted file: {image_path}")
 
         # Apply transforms
         if self.transform:

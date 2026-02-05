@@ -23,7 +23,9 @@ class Trainer:
         scheduler: Optional[Callable] = None,
         num_epochs: int = 100,
         early_stopping_patience: int = 10,
-        checkpoint_dir: str = './experiments/checkpoints'
+        checkpoint_dir: str = './experiments/checkpoints',
+        model_name: str = 'unknown',
+        num_classes: int = 2
     ):
         self.model = model
         self.train_loader = train_loader
@@ -35,10 +37,13 @@ class Trainer:
         self.num_epochs = num_epochs
         self.early_stopping_patience = early_stopping_patience
         self.checkpoint_dir = checkpoint_dir
+        self.model_name = model_name
+        self.num_classes = num_classes
 
         self.best_val_loss = float('inf')
         self.best_val_acc = 0.0
         self.patience_counter = 0
+        self.current_epoch = 0
         self.history = {
             'train_loss': [],
             'train_acc': [],
@@ -129,7 +134,10 @@ class Trainer:
             'optimizer_state_dict': self.optimizer.state_dict(),
             'best_val_loss': self.best_val_loss,
             'best_val_acc': self.best_val_acc,
-            'history': self.history
+            'history': self.history,
+            'arch': self.model_name,
+            'num_classes': self.num_classes,
+            'model_type': type(self.model).__name__
         }
 
         if self.scheduler is not None:
@@ -150,7 +158,8 @@ class Trainer:
         print(f'Starting training for {self.num_epochs} epochs...')
 
         for epoch in range(self.num_epochs):
-            print(f'\nEpoch {epoch + 1}/{self.num_epochs}')
+            self.current_epoch = epoch + 1
+            print(f'\nEpoch {self.current_epoch}/{self.num_epochs}')
             print('-' * 50)
 
             # Train

@@ -2,11 +2,14 @@
 
 import torch
 import numpy as np
+import logging
 from typing import Dict, List, Any, Callable
 import json
 from pathlib import Path
 import itertools
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 
 class HyperparameterSearch:
@@ -57,7 +60,7 @@ class HyperparameterSearch:
         with open(output_path, 'w') as f:
             json.dump(self.results, f, indent=2)
 
-        print(f"Saved search results to {output_path}")
+        logger.info(f"Saved search results to {output_path}")
 
 
 class GridSearch(HyperparameterSearch):
@@ -70,12 +73,12 @@ class GridSearch(HyperparameterSearch):
         param_values = list(self.param_grid.values())
         combinations = list(itertools.product(*param_values))
 
-        print(f"Starting grid search with {len(combinations)} combinations...")
+        logger.info(f"Starting grid search with {len(combinations)} combinations...")
 
         for i, combo in enumerate(combinations):
             params = dict(zip(param_names, combo))
 
-            print(f"\n[{i+1}/{len(combinations)}] Testing: {params}")
+            logger.info(f"[{i+1}/{len(combinations)}] Testing: {params}")
 
             # Train with these parameters
             metrics = self.train_fn(params)
@@ -87,11 +90,11 @@ class GridSearch(HyperparameterSearch):
                 'timestamp': datetime.now().isoformat()
             })
 
-            print(f"  {self.metric}: {metrics[self.metric]:.4f}")
+            logger.info(f"  {self.metric}: {metrics[self.metric]:.4f}")
 
         # Get best parameters
         best_params = self.get_best_params()
-        print(f"\n✅ Best parameters: {best_params}")
+        logger.info(f"Best parameters: {best_params}")
 
         return best_params
 
@@ -125,7 +128,7 @@ class RandomSearch(HyperparameterSearch):
 
     def search(self) -> Dict[str, Any]:
         """Perform random search."""
-        print(f"Starting random search with {self.n_iterations} iterations...")
+        logger.info(f"Starting random search with {self.n_iterations} iterations...")
 
         for i in range(self.n_iterations):
             # Sample parameters
@@ -133,7 +136,7 @@ class RandomSearch(HyperparameterSearch):
             for param_name, sampling_fn in self.param_distributions.items():
                 params[param_name] = sampling_fn(self.rng)
 
-            print(f"\n[{i+1}/{self.n_iterations}] Testing: {params}")
+            logger.info(f"[{i+1}/{self.n_iterations}] Testing: {params}")
 
             # Train with these parameters
             metrics = self.train_fn(params)
@@ -145,11 +148,11 @@ class RandomSearch(HyperparameterSearch):
                 'timestamp': datetime.now().isoformat()
             })
 
-            print(f"  {self.metric}: {metrics[self.metric]:.4f}")
+            logger.info(f"  {self.metric}: {metrics[self.metric]:.4f}")
 
         # Get best parameters
         best_params = self.get_best_params()
-        print(f"\n✅ Best parameters: {best_params}")
+        logger.info(f"Best parameters: {best_params}")
 
         return best_params
 
@@ -207,20 +210,20 @@ class ExperimentTracker:
         with open(output_path, 'w') as f:
             json.dump(self.experiments, f, indent=2)
 
-        print(f"Saved {len(self.experiments)} experiments to {output_path}")
+        logger.info(f"Saved {len(self.experiments)} experiments to {output_path}")
 
     def load(self, filename: str = 'experiment_tracker.json'):
         """Load experiments from JSON."""
         input_path = self.experiments_dir / filename
 
         if not input_path.exists():
-            print(f"No tracker file found at {input_path}")
+            logger.warning(f"No tracker file found at {input_path}")
             return
 
         with open(input_path, 'r') as f:
             self.experiments = json.load(f)
 
-        print(f"Loaded {len(self.experiments)} experiments")
+        logger.info(f"Loaded {len(self.experiments)} experiments")
 
     def get_best(self, metric: str = 'val_acc', maximize: bool = True):
         """Get best experiment by metric."""
@@ -237,11 +240,11 @@ class ExperimentTracker:
     def compare(self, metric: str = 'val_acc'):
         """Compare all experiments by metric."""
         if not self.experiments:
-            print("No experiments to compare")
+            logger.warning("No experiments to compare")
             return
 
-        print(f"\nExperiment Comparison ({metric}):")
-        print("="*80)
+        logger.info(f"Experiment Comparison ({metric}):")
+        logger.info("="*80)
 
         # Sort by metric
         sorted_exps = sorted(
@@ -251,7 +254,7 @@ class ExperimentTracker:
         )
 
         for i, exp in enumerate(sorted_exps):
-            print(f"{i+1}. {exp['name']}: {exp['metrics'][metric]:.4f}")
-            print(f"   Params: {exp['params']}")
+            logger.info(f"{i+1}. {exp['name']}: {exp['metrics'][metric]:.4f}")
+            logger.info(f"   Params: {exp['params']}")
 
-        print("="*80)
+        logger.info("="*80)

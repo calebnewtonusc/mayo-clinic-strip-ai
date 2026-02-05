@@ -252,16 +252,66 @@ def rand_bbox(size, lam):
 
 
 # Medical-specific augmentation helpers
-def simulate_imaging_artifacts(image, artifact_type='motion'):
+def simulate_imaging_artifacts(image, artifact_type='motion', intensity=0.1):
     """Simulate common medical imaging artifacts.
 
     Args:
-        image: Input image (numpy array)
-        artifact_type: Type of artifact ('motion', 'noise', 'bias_field')
+        image: Input image (numpy array) with values in [0, 255] or [0, 1]
+        artifact_type: Type of artifact ('motion', 'noise', 'bias_field', 'ghosting')
+        intensity: Strength of artifact effect (0-1)
 
     Returns:
-        Image with simulated artifacts
+        Image with simulated artifacts (same dtype and range as input)
     """
-    # Placeholder for future implementation
-    # Would include motion blur, field inhomogeneity, etc.
+    import cv2
+
+    # Preserve input range
+    input_max = image.max()
+    if input_max <= 1.0:
+        image = (image * 255).astype(np.uint8)
+        rescale = True
+    else:
+        image = image.astype(np.uint8)
+        rescale = False
+
+    if artifact_type == 'motion':
+        # Simulate motion blur
+        kernel_size = int(15 * intensity) * 2 + 1  # Odd size
+        kernel = np.zeros((kernel_size, kernel_size))
+        kernel[int((kernel_size - 1) / 2), :] = np.ones(kernel_size)
+        kernel = kernel / kernel_size
+        image = cv2.filter2D(image, -1, kernel)
+
+    elif artifact_type == 'noise':
+        # Add Rician noise (common in MRI)
+        noise_level = intensity * 25
+        noise = np.random.normal(0, noise_level, image.shape)
+        image = np.sqrt((image + noise) ** 2 + noise ** 2)
+        image = np.clip(image, 0, 255).astype(np.uint8)
+
+    elif artifact_type == 'bias_field':
+        # Simulate intensity non-uniformity (common in MRI)
+        h, w = image.shape[:2]
+        x = np.linspace(-1, 1, w)
+        y = np.linspace(-1, 1, h)
+        X, Y = np.meshgrid(x, y)
+
+        # Create smooth bias field
+        bias = 1 + intensity * (X**2 + Y**2 - 0.5)
+
+        if len(image.shape) == 3:
+            bias = bias[:, :, np.newaxis]
+
+        image = (image * bias).clip(0, 255).astype(np.uint8)
+
+    elif artifact_type == 'ghosting':
+        # Simulate ghosting artifact (common in MRI)
+        shift = int(10 * intensity)
+        ghost = np.roll(image, shift, axis=1)
+        image = (0.8 * image + 0.2 * intensity * ghost).clip(0, 255).astype(np.uint8)
+
+    # Rescale back to original range if needed
+    if rescale:
+        image = image.astype(np.float32) / 255.0
+
     return image
