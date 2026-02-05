@@ -236,21 +236,15 @@ def preprocess_image(image_bytes):
     """Preprocess image for inference."""
     import cv2
 
-    try:
-        # Use OpenCV to decode image from bytes (more robust than PIL)
-        nparr = np.frombuffer(image_bytes, np.uint8)
-        image_np = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    # Use OpenCV to decode image from bytes (more robust than PIL)
+    nparr = np.frombuffer(image_bytes, np.uint8)
+    image_np = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
-        if image_np is None:
-            raise ValueError("Failed to decode image with OpenCV")
+    if image_np is None:
+        raise ValueError("Failed to decode image - unsupported format or corrupted file")
 
-        # Convert BGR to RGB (OpenCV uses BGR)
-        image_np = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
-    except Exception as e:
-        logger.error(f"Failed to process image: {e}")
-        raise ValueError(f"Cannot process image: {str(e)}")
-
-    image_np = np.array(image)
+    # Convert BGR to RGB (OpenCV uses BGR)
+    image_np = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
 
     transform = A.Compose([
         A.Resize(height=224, width=224),
