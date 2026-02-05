@@ -283,6 +283,61 @@ def health_check():
     return jsonify(health_status)
 
 
+@app.route('/upload-model', methods=['POST'])
+@track_metrics('upload_model')
+@require_api_key
+def upload_model():
+    """Upload model file endpoint for updating the model remotely."""
+    global model, model_config
+
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+
+    if not file.filename.endswith('.pth'):
+        return jsonify({'error': 'Only .pth files are accepted'}), 400
+
+    try:
+        # Save the uploaded file
+        model_dir = Path('/app/models')
+        model_dir.mkdir(parents=True, exist_ok=True)
+        model_path = model_dir / 'best_model.pth'
+
+        file.save(str(model_path))
+        logger.info(f"Model file uploaded successfully to {model_path}")
+
+        # Reload the model
+        try:
+            model, model_config = load_model(str(model_path))
+            MODEL_LOADED.set(1)
+            logger.info(f"Model reloaded successfully: {model_config['arch']}")
+
+            return jsonify({
+                'success': True,
+                'message': 'Model uploaded and loaded successfully',
+                'model_info': {
+                    'architecture': model_config['arch'],
+                    'num_classes': model_config['num_classes'],
+                    'device': str(device)
+                }
+            }), 200
+        except Exception as e:
+            logger.error(f"Failed to load uploaded model: {e}")
+            return jsonify({
+                'success': False,
+                'error': f'Model uploaded but failed to load: {str(e)}'
+            }), 500
+
+    except Exception as e:
+        logger.error(f"Failed to upload model: {e}")
+        ERROR_TOTAL.labels(endpoint='upload_model', error_type=type(e).__name__).inc()
+        return jsonify({'error': f'Upload failed: {str(e)}'}), 500
+
+
 @app.route('/predict', methods=['POST'])
 @track_metrics('predict')
 @require_api_key
