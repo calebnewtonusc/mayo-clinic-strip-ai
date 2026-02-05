@@ -483,7 +483,7 @@ def main():
                         default=os.environ.get('API_HOST', '0.0.0.0'),
                         help='Host to run on')
     parser.add_argument('--port', type=int,
-                        default=int(os.environ.get('API_PORT', '5000')),
+                        default=int(os.environ.get('PORT', os.environ.get('API_PORT', '5000'))),
                         help='Port to run on')
     parser.add_argument('--debug', action='store_true',
                         help='Run in debug mode')
