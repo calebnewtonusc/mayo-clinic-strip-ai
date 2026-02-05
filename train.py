@@ -112,6 +112,14 @@ def main():
     # Loss function
     if config['loss']['type'] == 'cross_entropy':
         criterion = nn.CrossEntropyLoss()
+    elif config['loss']['type'] == 'weighted_cross_entropy':
+        if config['loss']['class_weights'] is not None:
+            class_weights = torch.tensor(config['loss']['class_weights'], dtype=torch.float32).to(device)
+            criterion = nn.CrossEntropyLoss(weight=class_weights)
+            print(f"Using weighted cross-entropy with class weights: {config['loss']['class_weights']}")
+        else:
+            criterion = nn.CrossEntropyLoss()
+            print("Warning: weighted_cross_entropy specified but no class_weights provided, using standard CE")
     else:
         raise ValueError(f"Unknown loss type: {config['loss']['type']}")
 

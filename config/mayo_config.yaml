@@ -1,0 +1,86 @@
+# Mayo Clinic STRIP AI configuration
+# Optimized for whole-slide pathology image classification
+
+# Data settings
+data:
+  data_dir: ./data/processed
+  image_size: 512  # Larger size for high-res pathology images
+  batch_size: 16  # Smaller batch for larger images
+  num_workers: 4
+  train_split: 0.7
+  val_split: 0.15
+  test_split: 0.15
+
+# Model settings
+model:
+  architecture: resnet34  # Good balance of capacity and speed
+  pretrained: true  # Transfer learning from ImageNet
+  freeze_backbone: false  # Fine-tune all layers
+  in_channels: 3
+  num_classes: 2
+
+# Training settings
+training:
+  num_epochs: 50  # Reduced for faster training with limited data
+  learning_rate: 0.0001  # Lower LR for transfer learning
+  weight_decay: 0.0001
+  optimizer: adamw  # AdamW often better for fine-tuning
+  scheduler: cosine  # Cosine annealing
+  scheduler_params:
+    T_max: 50
+    eta_min: 0.000001
+  early_stopping_patience: 10
+  gradient_clip: 1.0
+
+# Loss function with class weights for imbalance
+# CE: 547 images (72.5%), LAA: 207 images (27.5%)
+# Weight calculation: total / (num_classes * class_count)
+# CE weight: 754 / (2 * 547) = 0.689
+# LAA weight: 754 / (2 * 207) = 1.822
+loss:
+  type: weighted_cross_entropy
+  class_weights: [0.69, 1.82]  # Balance CE vs LAA
+
+# Augmentation - aggressive for medical imaging with limited data
+augmentation:
+  train:
+    horizontal_flip: 0.5
+    vertical_flip: 0.5
+    rotation_limit: 45  # More rotation for pathology
+    brightness_contrast: 0.6  # Strong color augmentation
+    gaussian_noise: 0.4
+    gaussian_blur: 0.3
+    elastic_transform: 0.3  # Tissue deformation
+    grid_distortion: 0.2  # Slide artifacts
+    optical_distortion: 0.2  # Lens artifacts
+    clahe: 0.3  # Contrast enhancement for pathology
+  test:
+    horizontal_flip: 0.0  # No augmentation during test
+
+# Evaluation
+evaluation:
+  patient_level_aggregation: mean  # Average predictions across patient images
+  metrics:
+    - accuracy
+    - precision
+    - recall
+    - f1_score
+    - roc_auc
+    - sensitivity
+    - specificity
+
+# Experiment tracking
+experiment:
+  name: mayo_clinic_strip_ai
+  base_dir: ./experiments
+  save_frequency: 5  # Save more frequently
+  log_frequency: 5  # Log more frequently
+
+# Reproducibility
+seed: 42
+
+# Paths
+paths:
+  checkpoint_dir: ./experiments/checkpoints
+  log_dir: ./experiments/logs
+  result_dir: ./experiments/results
