@@ -37,7 +37,15 @@ from src.evaluation.uncertainty import monte_carlo_dropout
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={
+    r"/*": {
+        "origins": [
+            "https://frontend-aus71qall-calebs-projects-a6310ab2.vercel.app",
+            "https://frontend-mauve-seven-92.vercel.app",
+            "http://localhost:3000"
+        ]
+    }
+})
 
 # Security: Set maximum file upload size (16 MB)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
