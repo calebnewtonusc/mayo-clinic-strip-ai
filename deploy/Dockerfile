@@ -27,6 +27,7 @@ COPY src/ ./src/
 COPY deploy/ ./deploy/
 COPY config/ ./config/
 COPY setup.py .
+COPY README.md .
 
 # Install package in editable mode for proper imports
 RUN pip install --no-cache-dir -e .
