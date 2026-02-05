@@ -55,12 +55,11 @@ data/
 *.h5
 *.hdf5
 
-# Models (mount separately)
+# Model checkpoints (exclude training artifacts, allow production model)
 checkpoints/
-*.pth
-*.pt
+experiments/checkpoints/
+experiments/logs/
 *.onnx
-models/
 
 # Logs
 logs/
