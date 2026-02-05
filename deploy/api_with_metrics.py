@@ -226,7 +226,7 @@ def load_model(checkpoint_path):
     config = {
         'arch': model_arch,
         'num_classes': num_classes,
-        'class_names': ['Cardioembolic (CE)', 'Large Artery Atherosclerosis (LAA)']
+        'class_names': ['CE', 'LAA']
     }
 
     return model, config
