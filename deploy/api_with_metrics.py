@@ -267,11 +267,20 @@ def metrics():
 @track_metrics('health')
 def health_check():
     """Health check endpoint with detailed status."""
+    import os
+    model_checkpoint_env = os.environ.get('MODEL_CHECKPOINT', 'NOT SET')
+
     health_status = {
         'status': 'healthy',
         'model_loaded': model is not None,
         'device': str(device) if device else 'not initialized',
-        'timestamp': datetime.now().isoformat()
+        'timestamp': datetime.now().isoformat(),
+        'debug': {
+            'model_checkpoint_env': model_checkpoint_env,
+            'model_file_exists': Path(model_checkpoint_env).exists() if model_checkpoint_env != 'NOT SET' else False,
+            'models_dir_exists': Path('/app/models').exists(),
+            'models_dir_contents': list(Path('/app/models').iterdir()) if Path('/app/models').exists() else []
+        }
     }
 
     if model is not None:
