@@ -234,12 +234,21 @@ def load_model(checkpoint_path):
 
 def preprocess_image(image_bytes):
     """Preprocess image for inference."""
-    bytes_io = io.BytesIO(image_bytes)
-    bytes_io.seek(0)  # Ensure stream is at beginning
-    image = Image.open(bytes_io)
+    import cv2
 
-    if image.mode != 'RGB':
-        image = image.convert('RGB')
+    try:
+        # Use OpenCV to decode image from bytes (more robust than PIL)
+        nparr = np.frombuffer(image_bytes, np.uint8)
+        image_np = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+        if image_np is None:
+            raise ValueError("Failed to decode image with OpenCV")
+
+        # Convert BGR to RGB (OpenCV uses BGR)
+        image_np = cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
+    except Exception as e:
+        logger.error(f"Failed to process image: {e}")
+        raise ValueError(f"Cannot process image: {str(e)}")
 
     image_np = np.array(image)
 
