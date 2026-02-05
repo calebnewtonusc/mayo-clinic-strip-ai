@@ -151,8 +151,300 @@ class EfficientNetClassifier(nn.Module):
         return self.backbone(x)
 
 
-# TODO: Add more architectures
-# - DenseNet
-# - Vision Transformer (ViT)
-# - Swin Transformer
-# - Custom medical imaging architectures
+class DenseNetClassifier(nn.Module):
+    """DenseNet-based classifier with transfer learning support."""
+
+    def __init__(
+        self,
+        arch: str = 'densenet121',
+        num_classes: int = 2,
+        pretrained: bool = True,
+        freeze_backbone: bool = False
+    ):
+        super(DenseNetClassifier, self).__init__()
+
+        # Load pretrained DenseNet
+        if arch == 'densenet121':
+            self.backbone = models.densenet121(pretrained=pretrained)
+            feature_dim = 1024
+        elif arch == 'densenet161':
+            self.backbone = models.densenet161(pretrained=pretrained)
+            feature_dim = 2208
+        elif arch == 'densenet169':
+            self.backbone = models.densenet169(pretrained=pretrained)
+            feature_dim = 1664
+        elif arch == 'densenet201':
+            self.backbone = models.densenet201(pretrained=pretrained)
+            feature_dim = 1920
+        else:
+            raise ValueError(f"Unknown architecture: {arch}")
+
+        # Freeze backbone if requested
+        if freeze_backbone:
+            for param in self.backbone.features.parameters():
+                param.requires_grad = False
+
+        # Replace classifier
+        self.backbone.classifier = nn.Linear(feature_dim, num_classes)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.backbone(x)
+
+    def unfreeze_backbone(self):
+        """Unfreeze all backbone parameters for fine-tuning."""
+        for param in self.backbone.parameters():
+            param.requires_grad = True
+
+
+class VisionTransformerClassifier(nn.Module):
+    """Vision Transformer (ViT) classifier."""
+
+    def __init__(
+        self,
+        arch: str = 'vit_b_16',
+        num_classes: int = 2,
+        pretrained: bool = True,
+        freeze_backbone: bool = False,
+        image_size: int = 224
+    ):
+        super(VisionTransformerClassifier, self).__init__()
+
+        # Load pretrained ViT
+        if arch == 'vit_b_16':
+            self.backbone = models.vit_b_16(pretrained=pretrained)
+            feature_dim = 768
+        elif arch == 'vit_b_32':
+            self.backbone = models.vit_b_32(pretrained=pretrained)
+            feature_dim = 768
+        elif arch == 'vit_l_16':
+            self.backbone = models.vit_l_16(pretrained=pretrained)
+            feature_dim = 1024
+        elif arch == 'vit_l_32':
+            self.backbone = models.vit_l_32(pretrained=pretrained)
+            feature_dim = 1024
+        else:
+            raise ValueError(f"Unknown architecture: {arch}")
+
+        # Freeze backbone if requested
+        if freeze_backbone:
+            for param in self.backbone.parameters():
+                param.requires_grad = False
+
+        # Replace classification head
+        self.backbone.heads = nn.Sequential(
+            nn.Linear(feature_dim, num_classes)
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.backbone(x)
+
+    def unfreeze_backbone(self):
+        """Unfreeze all backbone parameters for fine-tuning."""
+        for param in self.backbone.parameters():
+            param.requires_grad = True
+
+
+class SwinTransformerClassifier(nn.Module):
+    """Swin Transformer classifier."""
+
+    def __init__(
+        self,
+        arch: str = 'swin_t',
+        num_classes: int = 2,
+        pretrained: bool = True,
+        freeze_backbone: bool = False
+    ):
+        super(SwinTransformerClassifier, self).__init__()
+
+        # Load pretrained Swin Transformer
+        if arch == 'swin_t':
+            self.backbone = models.swin_t(pretrained=pretrained)
+            feature_dim = 768
+        elif arch == 'swin_s':
+            self.backbone = models.swin_s(pretrained=pretrained)
+            feature_dim = 768
+        elif arch == 'swin_b':
+            self.backbone = models.swin_b(pretrained=pretrained)
+            feature_dim = 1024
+        else:
+            raise ValueError(f"Unknown architecture: {arch}")
+
+        # Freeze backbone if requested
+        if freeze_backbone:
+            for param in self.backbone.parameters():
+                param.requires_grad = False
+
+        # Replace classification head
+        self.backbone.head = nn.Linear(feature_dim, num_classes)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.backbone(x)
+
+    def unfreeze_backbone(self):
+        """Unfreeze all backbone parameters for fine-tuning."""
+        for param in self.backbone.parameters():
+            param.requires_grad = True
+
+
+class MedicalCNN(nn.Module):
+    """Custom CNN designed for medical image analysis.
+
+    Features:
+    - Deeper architecture than SimpleCNN
+    - Squeeze-and-Excitation (SE) blocks for channel attention
+    - Residual connections for better gradient flow
+    - Suitable for medical imaging tasks
+    """
+
+    def __init__(self, in_channels: int = 3, num_classes: int = 2):
+        super(MedicalCNN, self).__init__()
+
+        self.conv1 = self._make_conv_block(in_channels, 64)
+        self.conv2 = self._make_conv_block(64, 128)
+        self.conv3 = self._make_conv_block(128, 256)
+        self.conv4 = self._make_conv_block(256, 512)
+
+        # Global pooling and classifier
+        self.global_pool = nn.AdaptiveAvgPool2d((1, 1))
+        self.classifier = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(512, 256),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.5),
+            nn.Linear(256, 128),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.3),
+            nn.Linear(128, num_classes)
+        )
+
+    def _make_conv_block(self, in_channels: int, out_channels: int) -> nn.Module:
+        """Create a convolutional block with SE attention."""
+        return nn.Sequential(
+            nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1),
+            nn.BatchNorm2d(out_channels),
+            SEBlock(out_channels),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        x = self.conv4(x)
+        x = self.global_pool(x)
+        x = self.classifier(x)
+        return x
+
+
+class SEBlock(nn.Module):
+    """Squeeze-and-Excitation block for channel attention."""
+
+    def __init__(self, channels: int, reduction: int = 16):
+        super(SEBlock, self).__init__()
+        self.squeeze = nn.AdaptiveAvgPool2d(1)
+        self.excitation = nn.Sequential(
+            nn.Linear(channels, channels // reduction, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Linear(channels // reduction, channels, bias=False),
+            nn.Sigmoid()
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        batch, channels, _, _ = x.size()
+        # Squeeze
+        y = self.squeeze(x).view(batch, channels)
+        # Excitation
+        y = self.excitation(y).view(batch, channels, 1, 1)
+        # Scale
+        return x * y.expand_as(x)
+
+
+def get_model(
+    arch: str,
+    num_classes: int = 2,
+    pretrained: bool = True,
+    freeze_backbone: bool = False,
+    **kwargs
+) -> nn.Module:
+    """Factory function to create model by architecture name.
+
+    Args:
+        arch: Architecture name
+        num_classes: Number of output classes
+        pretrained: Whether to load pretrained weights
+        freeze_backbone: Whether to freeze backbone parameters
+        **kwargs: Additional arguments passed to model constructor
+
+    Returns:
+        Model instance
+
+    Example:
+        >>> model = get_model('resnet50', num_classes=2, pretrained=True)
+        >>> model = get_model('vit_b_16', num_classes=3, pretrained=True)
+    """
+    arch_lower = arch.lower()
+
+    # ResNet family
+    if 'resnet' in arch_lower:
+        return ResNetClassifier(
+            arch=arch_lower,
+            num_classes=num_classes,
+            pretrained=pretrained,
+            freeze_backbone=freeze_backbone,
+            **kwargs
+        )
+
+    # EfficientNet family
+    elif 'efficientnet' in arch_lower:
+        return EfficientNetClassifier(
+            arch=arch_lower,
+            num_classes=num_classes,
+            pretrained=pretrained,
+            freeze_backbone=freeze_backbone
+        )
+
+    # DenseNet family
+    elif 'densenet' in arch_lower:
+        return DenseNetClassifier(
+            arch=arch_lower,
+            num_classes=num_classes,
+            pretrained=pretrained,
+            freeze_backbone=freeze_backbone
+        )
+
+    # Vision Transformer family
+    elif 'vit' in arch_lower:
+        return VisionTransformerClassifier(
+            arch=arch_lower,
+            num_classes=num_classes,
+            pretrained=pretrained,
+            freeze_backbone=freeze_backbone,
+            **kwargs
+        )
+
+    # Swin Transformer family
+    elif 'swin' in arch_lower:
+        return SwinTransformerClassifier(
+            arch=arch_lower,
+            num_classes=num_classes,
+            pretrained=pretrained,
+            freeze_backbone=freeze_backbone
+        )
+
+    # Simple CNN
+    elif arch_lower == 'simplecnn':
+        return SimpleCNN(num_classes=num_classes, **kwargs)
+
+    # Medical CNN
+    elif arch_lower == 'medicalcnn':
+        return MedicalCNN(num_classes=num_classes, **kwargs)
+
+    else:
+        raise ValueError(
+            f"Unknown architecture: {arch}. "
+            f"Supported: resnet*, efficientnet*, densenet*, vit*, swin*, simplecnn, medicalcnn"
+        )
