@@ -55,6 +55,9 @@ experiments/results/**
 *.pt
 *.ckpt
 
+# Allow production model for deployment
+!models/best_model.pth
+
 # TensorBoard
 runs/
 tensorboard/
@@ -80,3 +83,4 @@ Thumbs.db
 # Allow example data readme
 !data/raw/README.md
 !data/processed/README.md
+.vercel

@@ -34,8 +34,8 @@ COPY README.md .
 # Install package in editable mode for proper imports
 RUN pip install --no-cache-dir -e .
 
-# Create directory for models
-RUN mkdir -p /app/models
+# Copy model file into container
+COPY models/ ./models/
 
 # Expose port
 EXPOSE 5000
