@@ -40,8 +40,8 @@ app = Flask(__name__)
 CORS(app, resources={
     r"/*": {
         "origins": [
-            "https://frontend-aus71qall-calebs-projects-a6310ab2.vercel.app",
-            "https://frontend-mauve-seven-92.vercel.app",
+            "https://mayo-clinic-strip-ai.vercel.app",
+            "https://mayo-clinic-strip-ai-*.vercel.app",
             "http://localhost:3000"
         ]
     }
