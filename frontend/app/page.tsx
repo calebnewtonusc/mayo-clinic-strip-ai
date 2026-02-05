@@ -4,6 +4,7 @@ import { useState } from 'react';
 import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mayo-clinic-strip-ai-production.up.railway.app';
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY || 'cfUCTA4DuThL2sVezKTQ-V6ZNELQtCoBWawIVNRRCyw';
 
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
@@ -43,6 +44,7 @@ export default function Home() {
       const response = await axios.post(`${API_URL}/predict`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
+          'X-API-Key': API_KEY,
         },
       });
       setResult(response.data);
