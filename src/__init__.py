@@ -18,9 +18,19 @@ __license__ = "MIT"
 
 # Import key components for easier access
 try:
-    from src.data.dataset import StrokeDataset
+    from src.data.dataset import StrokeDataset, PatientLevelDataset
     from src.data.preprocessing import preprocess_image
-    from src.models.cnn import SimpleCNN
+    from src.models.cnn import (
+        SimpleCNN,
+        ResNetClassifier,
+        EfficientNetClassifier,
+        DenseNetClassifier,
+        VisionTransformerClassifier,
+        SwinTransformerClassifier,
+        MedicalCNN,
+        SEBlock,
+        get_model
+    )
     from src.training.trainer import Trainer
 except ImportError:
     # Handle case where dependencies aren't installed yet
@@ -28,7 +38,16 @@ except ImportError:
 
 __all__ = [
     "StrokeDataset",
+    "PatientLevelDataset",
     "preprocess_image",
     "SimpleCNN",
+    "ResNetClassifier",
+    "EfficientNetClassifier",
+    "DenseNetClassifier",
+    "VisionTransformerClassifier",
+    "SwinTransformerClassifier",
+    "MedicalCNN",
+    "SEBlock",
+    "get_model",
     "Trainer",
 ]

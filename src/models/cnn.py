@@ -7,7 +7,16 @@ from typing import Optional
 
 
 class SimpleCNN(nn.Module):
-    """Simple baseline CNN for binary classification."""
+    """Simple baseline CNN for binary classification.
+
+    Input shape: (batch_size, in_channels, height, width)
+    Output shape: (batch_size, num_classes)
+
+    Example:
+        >>> model = SimpleCNN(in_channels=3, num_classes=2)
+        >>> x = torch.randn(8, 3, 224, 224)  # batch of 8 RGB images
+        >>> y = model(x)  # Output: (8, 2)
+    """
 
     def __init__(self, in_channels: int = 3, num_classes: int = 2):
         super(SimpleCNN, self).__init__()
@@ -54,7 +63,18 @@ class SimpleCNN(nn.Module):
 
 
 class ResNetClassifier(nn.Module):
-    """ResNet-based classifier with transfer learning support."""
+    """ResNet-based classifier with transfer learning support.
+
+    Input shape: (batch_size, in_channels, height, width)
+    Output shape: (batch_size, num_classes)
+
+    Recommended input size: 224x224 for ImageNet pretrained weights
+
+    Example:
+        >>> model = ResNetClassifier(arch='resnet50', num_classes=2, pretrained=True)
+        >>> x = torch.randn(8, 3, 224, 224)
+        >>> y = model(x)  # Output: (8, 2)
+    """
 
     def __init__(
         self,
@@ -106,7 +126,23 @@ class ResNetClassifier(nn.Module):
 
 
 class EfficientNetClassifier(nn.Module):
-    """EfficientNet-based classifier."""
+    """EfficientNet-based classifier.
+
+    Input shape: (batch_size, 3, height, width)
+    Output shape: (batch_size, num_classes)
+
+    Recommended input sizes:
+    - EfficientNet-B0: 224x224
+    - EfficientNet-B1: 240x240
+    - EfficientNet-B2: 260x260
+    - EfficientNet-B3: 300x300
+    - EfficientNet-B4: 380x380
+
+    Example:
+        >>> model = EfficientNetClassifier(arch='efficientnet_b0', num_classes=2)
+        >>> x = torch.randn(8, 3, 224, 224)
+        >>> y = model(x)  # Output: (8, 2)
+    """
 
     def __init__(
         self,
@@ -150,16 +186,33 @@ class EfficientNetClassifier(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.backbone(x)
 
+    def unfreeze_backbone(self):
+        """Unfreeze all backbone parameters for fine-tuning."""
+        for param in self.backbone.parameters():
+            param.requires_grad = True
+
 
 class DenseNetClassifier(nn.Module):
-    """DenseNet-based classifier with transfer learning support."""
+    """DenseNet-based classifier with transfer learning support.
+
+    Input shape: (batch_size, in_channels, height, width)
+    Output shape: (batch_size, num_classes)
+
+    Recommended input size: 224x224 for ImageNet pretrained weights
+
+    Example:
+        >>> model = DenseNetClassifier(arch='densenet121', num_classes=2, in_channels=3)
+        >>> x = torch.randn(8, 3, 224, 224)
+        >>> y = model(x)  # Output: (8, 2)
+    """
 
     def __init__(
         self,
         arch: str = 'densenet121',
         num_classes: int = 2,
         pretrained: bool = True,
-        freeze_backbone: bool = False
+        freeze_backbone: bool = False,
+        in_channels: int = 3
     ):
         super(DenseNetClassifier, self).__init__()
 
@@ -179,13 +232,23 @@ class DenseNetClassifier(nn.Module):
         else:
             raise ValueError(f"Unknown architecture: {arch}")
 
+        # Modify first conv layer if not 3 channels
+        if in_channels != 3:
+            self.backbone.features.conv0 = nn.Conv2d(
+                in_channels, 64, kernel_size=7, stride=2, padding=3, bias=False
+            )
+
         # Freeze backbone if requested
         if freeze_backbone:
-            for param in self.backbone.features.parameters():
+            for param in self.backbone.parameters():
                 param.requires_grad = False
 
-        # Replace classifier
+        # Replace classifier (always trainable)
         self.backbone.classifier = nn.Linear(feature_dim, num_classes)
+        if freeze_backbone:
+            # Ensure classifier is trainable even when backbone is frozen
+            for param in self.backbone.classifier.parameters():
+                param.requires_grad = True
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.backbone(x)
@@ -197,7 +260,22 @@ class DenseNetClassifier(nn.Module):
 
 
 class VisionTransformerClassifier(nn.Module):
-    """Vision Transformer (ViT) classifier."""
+    """Vision Transformer (ViT) classifier.
+
+    Input shape: (batch_size, in_channels, height, width)
+    Output shape: (batch_size, num_classes)
+
+    Recommended input sizes:
+    - ViT-B/16: 224x224 (patch size 16x16)
+    - ViT-B/32: 224x224 (patch size 32x32)
+    - ViT-L/16: 224x224 (patch size 16x16)
+    - ViT-L/32: 224x224 (patch size 32x32)
+
+    Example:
+        >>> model = VisionTransformerClassifier(arch='vit_b_16', num_classes=2, in_channels=3)
+        >>> x = torch.randn(8, 3, 224, 224)
+        >>> y = model(x)  # Output: (8, 2)
+    """
 
     def __init__(
         self,
@@ -205,7 +283,8 @@ class VisionTransformerClassifier(nn.Module):
         num_classes: int = 2,
         pretrained: bool = True,
         freeze_backbone: bool = False,
-        image_size: int = 224
+        image_size: int = 224,
+        in_channels: int = 3
     ):
         super(VisionTransformerClassifier, self).__init__()
 
@@ -213,17 +292,27 @@ class VisionTransformerClassifier(nn.Module):
         if arch == 'vit_b_16':
             self.backbone = models.vit_b_16(pretrained=pretrained)
             feature_dim = 768
+            patch_size = 16
         elif arch == 'vit_b_32':
             self.backbone = models.vit_b_32(pretrained=pretrained)
             feature_dim = 768
+            patch_size = 32
         elif arch == 'vit_l_16':
             self.backbone = models.vit_l_16(pretrained=pretrained)
             feature_dim = 1024
+            patch_size = 16
         elif arch == 'vit_l_32':
             self.backbone = models.vit_l_32(pretrained=pretrained)
             feature_dim = 1024
+            patch_size = 32
         else:
             raise ValueError(f"Unknown architecture: {arch}")
+
+        # Modify patch embedding if not 3 channels
+        if in_channels != 3:
+            self.backbone.conv_proj = nn.Conv2d(
+                in_channels, feature_dim, kernel_size=patch_size, stride=patch_size
+            )
 
         # Freeze backbone if requested
         if freeze_backbone:
@@ -245,14 +334,26 @@ class VisionTransformerClassifier(nn.Module):
 
 
 class SwinTransformerClassifier(nn.Module):
-    """Swin Transformer classifier."""
+    """Swin Transformer classifier.
+
+    Input shape: (batch_size, in_channels, height, width)
+    Output shape: (batch_size, num_classes)
+
+    Recommended input size: 224x224 for ImageNet pretrained weights
+
+    Example:
+        >>> model = SwinTransformerClassifier(arch='swin_t', num_classes=2, in_channels=3)
+        >>> x = torch.randn(8, 3, 224, 224)
+        >>> y = model(x)  # Output: (8, 2)
+    """
 
     def __init__(
         self,
         arch: str = 'swin_t',
         num_classes: int = 2,
         pretrained: bool = True,
-        freeze_backbone: bool = False
+        freeze_backbone: bool = False,
+        in_channels: int = 3
     ):
         super(SwinTransformerClassifier, self).__init__()
 
@@ -260,14 +361,24 @@ class SwinTransformerClassifier(nn.Module):
         if arch == 'swin_t':
             self.backbone = models.swin_t(pretrained=pretrained)
             feature_dim = 768
+            embed_dim = 96
         elif arch == 'swin_s':
             self.backbone = models.swin_s(pretrained=pretrained)
             feature_dim = 768
+            embed_dim = 96
         elif arch == 'swin_b':
             self.backbone = models.swin_b(pretrained=pretrained)
             feature_dim = 1024
+            embed_dim = 128
         else:
             raise ValueError(f"Unknown architecture: {arch}")
+
+        # Modify patch embedding if not 3 channels
+        if in_channels != 3:
+            # Swin uses a patch embedding in features[0][0]
+            self.backbone.features[0][0] = nn.Conv2d(
+                in_channels, embed_dim, kernel_size=4, stride=4
+            )
 
         # Freeze backbone if requested
         if freeze_backbone:
@@ -294,6 +405,16 @@ class MedicalCNN(nn.Module):
     - Squeeze-and-Excitation (SE) blocks for channel attention
     - Residual connections for better gradient flow
     - Suitable for medical imaging tasks
+
+    Input shape: (batch_size, in_channels, height, width)
+    Output shape: (batch_size, num_classes)
+
+    Note: Input images should be at least 32x32. Larger images (224x224+) recommended.
+
+    Example:
+        >>> model = MedicalCNN(in_channels=3, num_classes=2)
+        >>> x = torch.randn(8, 3, 224, 224)
+        >>> y = model(x)  # Output: (8, 2)
     """
 
     def __init__(self, in_channels: int = 3, num_classes: int = 2):

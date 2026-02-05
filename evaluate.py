@@ -47,8 +47,16 @@ def evaluate_model(model, data_loader, device):
         labels = labels.to(device)
 
         outputs = model(images)
-        probs = torch.softmax(outputs, dim=1)[:, 1]  # Probability of positive class
+        probs_all = torch.softmax(outputs, dim=1)
         preds = torch.argmax(outputs, dim=1)
+
+        # For binary classification (num_classes=2), use probability of positive class
+        # For multiclass, use the max probability (confidence in prediction)
+        if outputs.shape[1] == 2:
+            probs = probs_all[:, 1]  # Probability of positive class (class 1)
+        else:
+            # For multiclass, use max probability as confidence score
+            probs = torch.max(probs_all, dim=1)[0]
 
         all_labels.extend(labels.cpu().numpy())
         all_preds.extend(preds.cpu().numpy())

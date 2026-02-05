@@ -11,7 +11,7 @@ def setup_logging(
     log_level: int = logging.INFO,
     log_to_file: bool = True,
     log_to_console: bool = True
-):
+) -> logging.Logger:
     """Set up logging configuration.
 
     Args:
@@ -19,6 +19,9 @@ def setup_logging(
         log_level: Logging level
         log_to_file: Whether to log to file
         log_to_console: Whether to log to console
+
+    Returns:
+        Configured logger instance
     """
     # Create log directory
     log_path = Path(log_dir)
@@ -56,7 +59,7 @@ def setup_logging(
     return logger
 
 
-def get_logger(name: str = 'mayo_strip_ai'):
+def get_logger(name: str = 'mayo_strip_ai') -> logging.Logger:
     """Get logger instance.
 
     Args:

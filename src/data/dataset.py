@@ -31,6 +31,14 @@ class StrokeDataset(Dataset):
         transform: Optional[Callable] = None,
         target_size: Tuple[int, int] = (224, 224)
     ):
+        # Validate split parameter
+        valid_splits = ['train', 'val', 'test']
+        if split not in valid_splits:
+            raise ValueError(
+                f"Invalid split '{split}'. Must be one of {valid_splits}. "
+                f"Did you mean 'val' instead of 'validation'?"
+            )
+
         self.data_dir = Path(data_dir)
         self.split = split
         self.transform = transform
@@ -85,12 +93,12 @@ class StrokeDataset(Dataset):
             if not class_dir.exists():
                 continue
 
-            # Find all images
-            for patient_dir in class_dir.iterdir():
+            # Find all images (sorted for deterministic ordering)
+            for patient_dir in sorted(class_dir.iterdir()):
                 if not patient_dir.is_dir():
                     continue
 
-                for img_path in patient_dir.glob('*'):
+                for img_path in sorted(patient_dir.glob('*')):
                     if img_path.suffix.lower() in ['.png', '.jpg', '.jpeg', '.npy']:
                         self.image_paths.append(str(img_path))
                         self.labels.append(label)
@@ -119,9 +127,10 @@ class StrokeDataset(Dataset):
                 image = np.array(Image.open(image_path).convert('RGB')).astype(np.float32)
         except Exception as e:
             logger.error(f"Failed to load image {image_path}: {e}")
-            # Return a blank image as fallback
-            image = np.zeros((224, 224, 3), dtype=np.float32)
-            logger.warning(f"Returning blank image for corrupted file: {image_path}")
+            raise IOError(
+                f"Corrupted or unreadable image file: {image_path}. "
+                f"Please check the file integrity and format. Original error: {e}"
+            ) from e
 
         # Apply transforms
         if self.transform:
@@ -176,7 +185,10 @@ class PatientLevelDataset(Dataset):
         if split_path.exists():
             self._load_from_split_file(split_path)
         else:
-            print(f"Warning: Split file {split_file} not found.")
+            raise FileNotFoundError(
+                f"Split file {split_file} not found. Patient-level dataset requires "
+                f"split files. Run create_patient_splits.py to generate them."
+            )
 
     def _load_from_split_file(self, split_path: Path):
         """Load patient data from split JSON file."""

@@ -1,5 +1,6 @@
 """Training loop implementation."""
 
+import os
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -7,6 +8,7 @@ from torch.optim import Optimizer
 from typing import Dict, Optional, Callable
 from tqdm import tqdm
 import numpy as np
+from pathlib import Path
 
 
 class Trainer:
@@ -36,7 +38,8 @@ class Trainer:
         self.scheduler = scheduler
         self.num_epochs = num_epochs
         self.early_stopping_patience = early_stopping_patience
-        self.checkpoint_dir = checkpoint_dir
+        # Convert checkpoint_dir to absolute path to avoid issues when running from different directories
+        self.checkpoint_dir = str(Path(checkpoint_dir).resolve())
         self.model_name = model_name
         self.num_classes = num_classes
 
@@ -115,11 +118,12 @@ class Trainer:
                 # Update progress bar
                 pbar.set_postfix({
                     'loss': f'{loss.item():.4f}',
-                    'acc': f'{100 * correct / total:.2f}%'
+                    'acc': f'{100 * correct / total:.2f}%' if total > 0 else '0.00%'
                 })
 
-        epoch_loss = running_loss / total
-        epoch_acc = correct / total
+        # Handle empty batches
+        epoch_loss = running_loss / total if total > 0 else 0.0
+        epoch_acc = correct / total if total > 0 else 0.0
 
         return {'loss': epoch_loss, 'acc': epoch_acc}
 

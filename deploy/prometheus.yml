@@ -1,0 +1,42 @@
+# Prometheus configuration for Mayo Clinic STRIP AI
+# Scrapes metrics from the Flask API with Prometheus instrumentation
+
+global:
+  scrape_interval: 15s  # How often to scrape targets
+  evaluation_interval: 15s  # How often to evaluate rules
+  external_labels:
+    monitor: 'mayo-strip-ai'
+    environment: 'production'
+
+# Alerting configuration (optional)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+          # - 'alertmanager:9093'  # Uncomment if using Alertmanager
+
+# Load rules once and periodically evaluate them
+rule_files:
+  # - "alert_rules.yml"  # Add your alert rules here
+
+# Scrape configurations
+scrape_configs:
+  # Mayo Clinic STRIP AI API
+  - job_name: 'mayo-strip-ai-api'
+    metrics_path: '/metrics'
+    scrape_interval: 10s  # Scrape every 10 seconds
+    static_configs:
+      - targets: ['api:5000']
+        labels:
+          service: 'ml-api'
+          app: 'mayo-strip-ai'
+
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Optional: Add Grafana metrics
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']

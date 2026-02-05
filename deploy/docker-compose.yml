@@ -9,11 +9,14 @@ services:
       - "5000:5000"
     volumes:
       # Mount model checkpoint
+      # IMPORTANT: Place your trained model file at ./models/best_model.pth before starting!
+      # Example: cp ../experiments/baseline_experiment/checkpoints/best_model.pth ./models/
       - ./models:/app/models
       # Mount config (optional)
       - ../config:/app/config
     environment:
       - FLASK_ENV=production
+      # Ensure best_model.pth exists in ./models/ directory
       - MODEL_CHECKPOINT=/app/models/best_model.pth
     command: python deploy/api.py --checkpoint /app/models/best_model.pth --host 0.0.0.0 --port 5000
     restart: unless-stopped

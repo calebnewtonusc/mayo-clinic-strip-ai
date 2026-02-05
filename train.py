@@ -140,16 +140,38 @@ def main():
 
     # Learning rate scheduler
     scheduler = None
-    if config['training']['scheduler'] == 'step':
+    scheduler_type = config['training'].get('scheduler', 'none').lower()
+
+    if scheduler_type == 'step':
+        # Validate scheduler_params exists
+        if 'scheduler_params' not in config['training']:
+            raise ValueError(
+                "Scheduler type 'step' requires 'scheduler_params' in config with 'step_size' and 'gamma'"
+            )
+        params = config['training']['scheduler_params']
+        if 'step_size' not in params or 'gamma' not in params:
+            raise ValueError(
+                f"StepLR scheduler requires 'step_size' and 'gamma' in scheduler_params. "
+                f"Got: {list(params.keys())}"
+            )
         scheduler = optim.lr_scheduler.StepLR(
             optimizer,
-            step_size=config['training']['scheduler_params']['step_size'],
-            gamma=config['training']['scheduler_params']['gamma']
+            step_size=params['step_size'],
+            gamma=params['gamma']
         )
-    elif config['training']['scheduler'] == 'cosine':
+        print(f"Using StepLR scheduler with step_size={params['step_size']}, gamma={params['gamma']}")
+    elif scheduler_type == 'cosine':
         scheduler = optim.lr_scheduler.CosineAnnealingLR(
             optimizer,
             T_max=config['training']['num_epochs']
+        )
+        print(f"Using CosineAnnealingLR scheduler with T_max={config['training']['num_epochs']}")
+    elif scheduler_type in ['none', '']:
+        print("No learning rate scheduler")
+    else:
+        raise ValueError(
+            f"Unknown scheduler type: '{scheduler_type}'. "
+            f"Supported: 'step', 'cosine', 'none'"
         )
 
     # Create trainer
@@ -163,13 +185,15 @@ def main():
         scheduler=scheduler,
         num_epochs=config['training']['num_epochs'],
         early_stopping_patience=config['training']['early_stopping_patience'],
-        checkpoint_dir=str(exp_dir / 'checkpoints')
+        checkpoint_dir=str(exp_dir / 'checkpoints'),
+        model_name=config['model']['architecture'],
+        num_classes=config['model']['num_classes']
     )
 
     # Resume from checkpoint if specified
     if args.resume:
         print(f'Resuming from checkpoint: {args.resume}')
-        checkpoint = torch.load(args.resume)
+        checkpoint = torch.load(args.resume, map_location=device)
         model.load_state_dict(checkpoint['model_state_dict'])
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         if scheduler and 'scheduler_state_dict' in checkpoint:

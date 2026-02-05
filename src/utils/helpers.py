@@ -12,7 +12,7 @@ from typing import Dict, Any
 logger = logging.getLogger(__name__)
 
 
-def set_seed(seed: int = 42):
+def set_seed(seed: int = 42) -> None:
     """Set random seeds for reproducibility.
 
     Args:
@@ -75,7 +75,7 @@ def load_config(config_path: str, validate: bool = True) -> Dict[str, Any]:
     return config
 
 
-def _validate_config(config: Dict[str, Any], config_path: Path):
+def _validate_config(config: Dict[str, Any], config_path: Path) -> None:
     """Validate that config has reasonable structure.
 
     Args:
@@ -91,9 +91,9 @@ def _validate_config(config: Dict[str, Any], config_path: Path):
             raise ValueError(
                 f"Config 'model' must be a dict in {config_path}"
             )
-        if 'arch' not in config['model']:
+        if 'architecture' not in config['model']:
             raise ValueError(
-                f"Config 'model' missing required 'arch' key in {config_path}"
+                f"Config 'model' missing required 'architecture' key in {config_path}"
             )
 
     if 'training' in config:
@@ -103,7 +103,7 @@ def _validate_config(config: Dict[str, Any], config_path: Path):
             )
 
         # Validate numeric parameters
-        numeric_keys = ['batch_size', 'epochs', 'learning_rate']
+        numeric_keys = ['batch_size', 'num_epochs', 'learning_rate']
         for key in numeric_keys:
             if key in config['training']:
                 value = config['training'][key]
@@ -113,8 +113,30 @@ def _validate_config(config: Dict[str, Any], config_path: Path):
                         f"got {value} in {config_path}"
                     )
 
+    # Validate data config
+    if 'data' in config:
+        if not isinstance(config['data'], dict):
+            raise ValueError(
+                f"Config 'data' must be a dict in {config_path}"
+            )
+        if 'data_dir' not in config['data']:
+            raise ValueError(
+                f"Config 'data' missing required 'data_dir' key in {config_path}"
+            )
 
-def save_config(config: Dict[str, Any], save_path: str):
+    # Validate loss config
+    if 'loss' in config:
+        if not isinstance(config['loss'], dict):
+            raise ValueError(
+                f"Config 'loss' must be a dict in {config_path}"
+            )
+        if 'type' not in config['loss']:
+            raise ValueError(
+                f"Config 'loss' missing required 'type' key in {config_path}"
+            )
+
+
+def save_config(config: Dict[str, Any], save_path: str) -> None:
     """Save configuration to file.
 
     Args:

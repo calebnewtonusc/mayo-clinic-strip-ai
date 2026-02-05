@@ -1,0 +1,279 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.9'
+  DOCKER_REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Job 1: Code Quality and Linting
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 black isort mypy pylint
+          pip install -r requirements.txt
+
+      - name: Run Black (code formatting)
+        run: black --check src/ scripts/ deploy/ tests/
+
+      - name: Run isort (import sorting)
+        run: isort --check-only src/ scripts/ deploy/ tests/
+
+      - name: Run Flake8 (linting)
+        run: flake8 src/ scripts/ deploy/ tests/ --max-line-length=120 --extend-ignore=E203,W503
+
+      - name: Run MyPy (type checking)
+        run: mypy src/ --ignore-missing-imports --no-strict-optional
+        continue-on-error: true
+
+  # Job 2: Unit and Integration Tests
+  test:
+    name: Run Tests
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ['3.8', '3.9', '3.10']
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-cov pytest-xdist
+
+      - name: Run unit tests
+        run: |
+          pytest tests/test_everything.py -v --tb=short --cov=src --cov-report=xml --cov-report=term
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          name: codecov-${{ matrix.os }}-py${{ matrix.python-version }}
+        continue-on-error: true
+
+  # Job 3: Model Validation
+  model-validation:
+    name: Model Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Test model architectures
+        run: |
+          python -c "
+          import torch
+          from src.models.cnn import SimpleCNN, ResNetClassifier, EfficientNetClassifier
+          from src.models.cnn import DenseNetClassifier, ViTClassifier, SwinClassifier, MedicalCNN
+
+          # Test all architectures
+          models = [
+              SimpleCNN(in_channels=3, num_classes=2),
+              ResNetClassifier(arch='resnet18', num_classes=2, pretrained=False),
+              EfficientNetClassifier(arch='efficientnet_b0', num_classes=2, pretrained=False),
+              DenseNetClassifier(arch='densenet121', num_classes=2, pretrained=False),
+              ViTClassifier(arch='vit_b_16', num_classes=2, pretrained=False),
+              SwinClassifier(arch='swin_t', num_classes=2, pretrained=False),
+              MedicalCNN(in_channels=3, num_classes=2)
+          ]
+
+          x = torch.randn(2, 3, 224, 224)
+          for model in models:
+              model.eval()
+              with torch.no_grad():
+                  y = model(x)
+              assert y.shape == (2, 2), f'{type(model).__name__} output shape mismatch'
+              print(f'✓ {type(model).__name__} validated')
+          "
+
+      - name: Test ensemble system
+        run: |
+          python tests/test_enhancements.py
+        continue-on-error: true
+
+  # Job 4: Security Scanning
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Run Bandit (security linter)
+        run: |
+          pip install bandit
+          bandit -r src/ scripts/ deploy/ -ll
+        continue-on-error: true
+
+      - name: Run Safety (dependency vulnerability check)
+        run: |
+          pip install safety
+          safety check --json || true
+        continue-on-error: true
+
+  # Job 5: Docker Build and Push
+  docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    needs: [code-quality, test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix={{branch}}-
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./deploy/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Job 6: Performance Benchmarks
+  benchmarks:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run inference benchmarks
+        run: |
+          python -c "
+          import torch
+          import time
+          from src.models.cnn import ResNetClassifier
+
+          model = ResNetClassifier(arch='resnet18', num_classes=2, pretrained=False)
+          model.eval()
+          x = torch.randn(16, 3, 224, 224)
+
+          # Warmup
+          with torch.no_grad():
+              for _ in range(10):
+                  _ = model(x)
+
+          # Benchmark
+          times = []
+          with torch.no_grad():
+              for _ in range(100):
+                  start = time.time()
+                  _ = model(x)
+                  times.append(time.time() - start)
+
+          avg_time = sum(times) / len(times)
+          throughput = 16 / avg_time
+          print(f'Average batch time: {avg_time*1000:.2f}ms')
+          print(f'Throughput: {throughput:.1f} images/sec')
+          "
+
+  # Job 7: Documentation Build
+  docs:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Validate README
+        run: |
+          [ -f README.md ] && echo "✓ README.md exists" || exit 1
+          [ -f ENHANCEMENTS.md ] && echo "✓ ENHANCEMENTS.md exists" || exit 1
+
+      - name: Check for broken links
+        run: |
+          pip install markdown-link-check || true
+        continue-on-error: true

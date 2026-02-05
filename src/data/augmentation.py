@@ -3,7 +3,8 @@
 import numpy as np
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
-from typing import Optional
+from typing import Optional, Tuple, Any
+import torch
 
 
 def get_train_augmentation(
@@ -137,7 +138,11 @@ def get_strong_augmentation(image_size: int = 224) -> A.Compose:
     ])
 
 
-def mixup_data(x, y, alpha=1.0):
+def mixup_data(
+    x: torch.Tensor,
+    y: torch.Tensor,
+    alpha: float = 1.0
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, float]:
     """Apply MixUp augmentation.
 
     MixUp: Beyond Empirical Risk Minimization (Zhang et al., 2017)
@@ -152,7 +157,6 @@ def mixup_data(x, y, alpha=1.0):
         Tuple of (mixed_x, y_a, y_b, lambda)
         where mixed_x = lambda * x + (1 - lambda) * x_shuffled
     """
-    import torch
 
     if alpha > 0:
         lam = np.random.beta(alpha, alpha)
@@ -168,7 +172,13 @@ def mixup_data(x, y, alpha=1.0):
     return mixed_x, y_a, y_b, lam
 
 
-def mixup_criterion(criterion, pred, y_a, y_b, lam):
+def mixup_criterion(
+    criterion: Any,
+    pred: torch.Tensor,
+    y_a: torch.Tensor,
+    y_b: torch.Tensor,
+    lam: float
+) -> torch.Tensor:
     """Compute loss for MixUp training.
 
     Args:
@@ -184,7 +194,11 @@ def mixup_criterion(criterion, pred, y_a, y_b, lam):
     return lam * criterion(pred, y_a) + (1 - lam) * criterion(pred, y_b)
 
 
-def cutmix_data(x, y, alpha=1.0):
+def cutmix_data(
+    x: torch.Tensor,
+    y: torch.Tensor,
+    alpha: float = 1.0
+) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, float]:
     """Apply CutMix augmentation.
 
     CutMix: Regularization Strategy to Train Strong Classifiers (Yun et al., 2019)
@@ -198,7 +212,6 @@ def cutmix_data(x, y, alpha=1.0):
     Returns:
         Tuple of (mixed_x, y_a, y_b, lambda)
     """
-    import torch
 
     if alpha > 0:
         lam = np.random.beta(alpha, alpha)
@@ -223,7 +236,7 @@ def cutmix_data(x, y, alpha=1.0):
     return mixed_x, y_a, y_b, lam
 
 
-def rand_bbox(size, lam):
+def rand_bbox(size: torch.Size, lam: float) -> Tuple[int, int, int, int]:
     """Generate random bounding box for CutMix.
 
     Args:
@@ -252,7 +265,11 @@ def rand_bbox(size, lam):
 
 
 # Medical-specific augmentation helpers
-def simulate_imaging_artifacts(image, artifact_type='motion', intensity=0.1):
+def simulate_imaging_artifacts(
+    image: np.ndarray,
+    artifact_type: str = 'motion',
+    intensity: float = 0.1
+) -> np.ndarray:
     """Simulate common medical imaging artifacts.
 
     Args:

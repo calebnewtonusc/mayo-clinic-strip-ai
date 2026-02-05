@@ -36,8 +36,22 @@ def calculate_metrics(
     if y_prob is not None:
         metrics['roc_auc'] = roc_auc_score(y_true, y_prob)
 
-    # Clinical metrics
-    tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
+    # Clinical metrics - handle edge case where confusion matrix isn't 2x2
+    try:
+        cm = confusion_matrix(y_true, y_pred, labels=[0, 1])
+        if cm.shape == (2, 2):
+            tn, fp, fn, tp = cm.ravel()
+        else:
+            # Handle degenerate case (all predictions same class)
+            tn = fp = fn = tp = 0
+            if cm.shape == (1, 1):
+                if y_true[0] == 0:
+                    tn = cm[0, 0]
+                else:
+                    tp = cm[0, 0]
+    except ValueError:
+        # Fallback for edge cases
+        tn = fp = fn = tp = 0
 
     metrics['sensitivity'] = tp / (tp + fn) if (tp + fn) > 0 else 0.0  # Same as recall
     metrics['specificity'] = tn / (tn + fp) if (tn + fp) > 0 else 0.0
