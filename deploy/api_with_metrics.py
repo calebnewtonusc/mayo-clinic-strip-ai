@@ -234,7 +234,9 @@ def load_model(checkpoint_path):
 
 def preprocess_image(image_bytes):
     """Preprocess image for inference."""
-    image = Image.open(io.BytesIO(image_bytes))
+    bytes_io = io.BytesIO(image_bytes)
+    bytes_io.seek(0)  # Ensure stream is at beginning
+    image = Image.open(bytes_io)
 
     if image.mode != 'RGB':
         image = image.convert('RGB')
