@@ -512,12 +512,18 @@ def main():
     )
     logger = logging.getLogger(__name__)
 
-    # Load model
-    logger.info(f"Loading model from {args.checkpoint}...")
+    # Load model (optional - API can start without model)
+    logger.info(f"Attempting to load model from {args.checkpoint}...")
     global model, model_config
-    model, model_config = load_model(args.checkpoint)
-    logger.info(f"Model loaded: {model_config['arch']}")
-    logger.info(f"Device: {device}")
+    try:
+        model, model_config = load_model(args.checkpoint)
+        logger.info(f"Model loaded successfully: {model_config['arch']}")
+        logger.info(f"Device: {device}")
+    except FileNotFoundError:
+        logger.warning(f"Model file not found: {args.checkpoint}")
+        logger.warning("API will start without a model - predictions will fail until model is uploaded")
+        model = None
+        model_config = None
     logger.info(f"Logging to: {log_file}")
 
     # Setup graceful shutdown
