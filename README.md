@@ -1,5 +1,18 @@
 # Mayo Clinic - STRIP AI: Stroke Blood Clot Origin Classification
 
+## 🚀 Quick Start
+
+**New to this project?** Get started in 5 minutes:
+
+```bash
+# Test with dummy data (recommended first!)
+python scripts/run_end_to_end_test.py
+```
+
+📖 **Full guide**: See [QUICKSTART.md](QUICKSTART.md) for detailed instructions.
+
+---
+
 ## Project Overview
 
 This project focuses on classifying stroke blood clot origin using deep learning techniques on medical imaging data. The goal is to distinguish between:
@@ -56,45 +69,60 @@ mayo-clinic-strip-ai/
 
 ## Getting Started
 
+### 📚 Essential Documentation
+
+- **[QUICKSTART.md](QUICKSTART.md)** - Get started in 5 minutes
+- **[PHASES_1_5_COMPLETE.md](PHASES_1_5_COMPLETE.md)** - Complete guide for Phases 1-5 (data pipeline)
+- **[docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md)** - Full 17-phase roadmap (250+ tasks)
+- **[docs/MEDICAL_IMAGING_BEST_PRACTICES.md](docs/MEDICAL_IMAGING_BEST_PRACTICES.md)** - ML best practices
+- **[docs/MEDICAL_DOMAIN.md](docs/MEDICAL_DOMAIN.md)** - Medical background knowledge
+
 ### Prerequisites
 
 - Python 3.8+
 - CUDA-capable GPU (recommended)
-- Access to Mayo Clinic STRIP dataset (requires IRB approval)
+- Access to Mayo Clinic STRIP dataset (requires IRB approval, or use dummy data for testing)
 
-### Installation
+### Quick Installation
 
 ```bash
-# Clone the repository
-git clone <repository-url>
+# Clone and setup
+git clone https://github.com/calebnewtonusc/mayo-clinic-strip-ai.git
 cd mayo-clinic-strip-ai
 
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
+# Install
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
+
+# Test with dummy data
+python scripts/run_end_to_end_test.py
 ```
 
 ### Data Setup
 
-Place your data in the `data/raw/` directory following the structure:
+Place your data in `data/raw/` following this structure:
 ```
 data/raw/
-├── CE/
-│   ├── patient_001/
-│   └── patient_002/
-└── LAA/
-    ├── patient_003/
-    └── patient_004/
+├── CE/patient_001/*.dcm
+├── CE/patient_002/*.dcm
+└── LAA/patient_003/*.dcm
 ```
+
+Or generate test data: `python scripts/generate_dummy_data.py`
 
 See [docs/DATA_PREPARATION.md](docs/DATA_PREPARATION.md) for detailed instructions.
 
-## Development Roadmap
+## Development Status
 
-See [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for the detailed, phase-by-phase implementation plan.
+✅ **Phases 1-5 Complete** - Full data pipeline implemented!
+- Environment setup
+- Data exploration and validation
+- Preprocessing pipeline
+- Augmentation system
+- Dataset & DataLoader
+
+See [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for the full 17-phase roadmap.
 
 ## Team
 
