@@ -84,3 +84,4 @@ Thumbs.db
 !data/raw/README.md
 !data/processed/README.md
 .vercel
+logs/
