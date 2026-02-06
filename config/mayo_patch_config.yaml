@@ -1,0 +1,38 @@
+# Mayo Clinic STRIP AI - Patch-Based Configuration
+# Uses Vision Transformer with patch extraction instead of resizing
+
+# Data settings
+data:
+  data_dir: ./data/processed
+  patch_size: 224  # Match ViT model input size
+  num_patches_per_image: 16  # Extract 16 patches per whole-slide image
+  patch_mode: random  # 'random' or 'grid'
+  batch_size: 32  # Can be larger with patches
+  num_workers: 4
+
+# Model settings
+model:
+  model_name: google/vit-base-patch16-224-in21k  # Pre-trained Vision Transformer
+  pretrained: true
+  num_classes: 2
+
+# Loss function with class weights
+# CE: 547 images (72.5%), LAA: 207 images (27.5%)
+loss:
+  class_weights: [0.69, 1.82]
+
+# Training settings
+training:
+  num_epochs: 30
+  learning_rate: 0.00005  # Lower LR for fine-tuning transformers
+  min_learning_rate: 0.000001
+  weight_decay: 0.01  # Higher weight decay for transformers
+  early_stopping_patience: 10
+
+# Experiment tracking
+experiment:
+  name: mayo_patch_based_vit
+  base_dir: ./experiments/patch_based
+
+# Reproducibility
+seed: 42
