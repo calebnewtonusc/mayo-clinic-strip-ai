@@ -20,7 +20,7 @@
 
 ---
 
-## 🎯 Overview
+## [target] Overview
 
 This project implements a comprehensive deep learning pipeline for classifying stroke blood clot origin from medical imaging. The system distinguishes between:
 
@@ -54,7 +54,7 @@ See [PROJECT_STATUS.md](PROJECT_STATUS.md) for detailed progress.
 
 ---
 
-## 🚀 Quick Start
+## [rocket.fill] Quick Start
 
 ### Option 1: Test with Dummy Data (Recommended First!)
 
@@ -113,7 +113,7 @@ See [QUICKSTART.md](QUICKSTART.md) for detailed 5-minute setup guide.
 
 ---
 
-## 📁 Data Directory Setup
+## [folder.fill] Data Directory Setup
 
 ### Expected Data Structure
 
@@ -203,7 +203,7 @@ See [docs/DATA_PREPARATION.md](docs/DATA_PREPARATION.md) for complete data prepa
 
 ---
 
-## 📚 Documentation
+## [books.vertical.fill] Documentation
 
 ### Getting Started
 - **[QUICKSTART.md](QUICKSTART.md)** - 5-minute setup guide
@@ -226,7 +226,7 @@ See [docs/DATA_PREPARATION.md](docs/DATA_PREPARATION.md) for complete data prepa
 
 ---
 
-## ✨ Features
+## [sparkles] Features
 
 ### Medical Imaging Best Practices
 - ✅ **Patient-level data splitting** - Prevents data leakage (critical!)
@@ -270,20 +270,20 @@ See [docs/DATA_PREPARATION.md](docs/DATA_PREPARATION.md) for complete data prepa
 
 ---
 
-## 🏗️ Architecture
+## [building.2.fill] Architecture
 
 ### Project Structure
 
 ```
 mayo-clinic-strip-ai/
-├── 📄 Documentation
+├── [doc.fill] Documentation
 │   ├── README.md                    # This file
 │   ├── QUICKSTART.md               # 5-minute guide
 │   ├── FINAL_SUMMARY.md            # Complete overview
 │   ├── PROJECT_STATUS.md           # Current status
 │   └── docs/                       # Detailed guides
 │
-├── 💻 Source Code
+├── [laptopcomputer] Source Code
 │   ├── src/
 │   │   ├── data/                   # Data pipeline
 │   │   │   ├── dataset.py         # PyTorch datasets
@@ -305,7 +305,7 @@ mayo-clinic-strip-ai/
 │   ├── train.py                   # Main training script
 │   └── evaluate.py                # Main evaluation script
 │
-├── 🛠️ Scripts (20+ utilities)
+├── [wrench.and.screwdriver.fill] Scripts (20+ utilities)
 │   ├── scripts/
 │   │   ├── setup_environment.sh   # Automated setup
 │   │   ├── generate_dummy_data.py # Test data
@@ -318,14 +318,14 @@ mayo-clinic-strip-ai/
 │   │   ├── optimize_model.py      # Model optimization
 │   │   └── run_tests.py           # Test runner
 │
-├── 🧪 Tests
+├── [flask.fill] Tests
 │   └── tests/
 │       ├── test_dataset.py        # Dataset tests
 │       ├── test_models.py         # Model tests
 │       ├── test_preprocessing.py  # Preprocessing tests
 │       └── test_integration.py    # End-to-end tests
 │
-├── 🚀 Deployment
+├── [rocket.fill] Deployment
 │   └── deploy/
 │       ├── api.py                 # Flask REST API
 │       ├── api_client.py          # Python client
@@ -333,20 +333,20 @@ mayo-clinic-strip-ai/
 │       ├── docker-compose.yml     # Docker Compose
 │       └── README.md              # Deployment guide
 │
-├── 📊 Experiments (not in git)
+├── [chart.bar.fill] Experiments (not in git)
 │   ├── data/                      # Data storage
 │   ├── checkpoints/               # Model checkpoints
 │   ├── logs/                      # Training logs
 │   └── results/                   # Evaluation results
 │
-└── ⚙️ Configuration
+└── [gearshape.fill] Configuration
     ├── config/default_config.yaml # Default hyperparameters
     └── requirements.txt           # Python dependencies
 ```
 
 ---
 
-## 🔬 Usage Examples
+## [flask.fill] Usage Examples
 
 ### Basic Training
 
@@ -463,7 +463,7 @@ python scripts/optimize_model.py \
 
 ---
 
-## 🧪 Testing
+## [flask.fill] Testing
 
 ```bash
 # Run all tests
@@ -481,7 +481,7 @@ python scripts/run_end_to_end_test.py
 
 ---
 
-## 📊 Performance Benchmarks
+## [chart.bar.fill] Performance Benchmarks
 
 ### Model Performance (Typical)
 - **Accuracy**: 85-92% (depends on dataset size and quality)
@@ -505,7 +505,7 @@ python scripts/run_end_to_end_test.py
 
 ---
 
-## 🤝 Contributing
+## [hand.wave.fill] Contributing
 
 This is a collaborative research project. To contribute:
 
@@ -531,7 +531,7 @@ black src/ tests/ scripts/
 
 ---
 
-## 📈 Roadmap
+## [chart.line.uptrend.xyaxis] Roadmap
 
 - [x] Phase 1-5: Core data pipeline
 - [x] Phase 6-8: Training and evaluation
@@ -548,7 +548,7 @@ See [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for detailed road
 
 ---
 
-## 🔒 Ethics & Privacy
+## [lock.fill] Ethics & Privacy
 
 ### HIPAA Compliance
 - All data is de-identified before processing
@@ -564,7 +564,7 @@ See [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md) for detailed road
 
 ---
 
-## 📄 License
+## [doc.fill] License
 
 This project is for research and educational purposes. For clinical use, ensure:
 - Proper validation with independent test sets
@@ -574,7 +574,7 @@ This project is for research and educational purposes. For clinical use, ensure:
 
 ---
 
-## 📖 Citation
+## [book.fill] Citation
 
 If you use this code in your research, please cite:
 
@@ -590,7 +590,7 @@ If you use this code in your research, please cite:
 
 ---
 
-## 🙏 Acknowledgments
+## [hands.clap.fill] Acknowledgments
 
 - **Mayo Clinic** for providing the STRIP dataset and clinical expertise
 - **PyTorch team** for the excellent deep learning framework
@@ -599,7 +599,7 @@ If you use this code in your research, please cite:
 
 ---
 
-## 📞 Support
+## [phone.fill] Support
 
 - **Documentation**: See `docs/` directory
 - **Issues**: [GitHub Issues](https://github.com/calebnewtonusc/mayo-clinic-strip-ai/issues)
@@ -621,7 +621,7 @@ If you use this code in your research, please cite:
 
 <div align="center">
 
-**Built with ❤️ for advancing stroke care through AI**
+**Built with [heart.fill] for advancing stroke care through AI**
 
 [⬆ back to top](#mayo-clinic-strip-ai-stroke-blood-clot-classification)
 
