@@ -229,7 +229,7 @@ def main():
     print(f"Failed: {failed}")
 
     if failed == 0:
-        print("\n✅ ALL PRODUCTION FEATURES VERIFIED!")
+        print("\n[checkmark.circle] ALL PRODUCTION FEATURES VERIFIED!")
         print("\nProduction stack is complete and ready:")
         print("  • Docker Compose with Prometheus + Grafana")
         print("  • CI/CD GitHub Actions workflow")

@@ -80,7 +80,7 @@ try:
     print(f"   ✓ Gradient clipping: {trainer.gradient_clip_value}")
 
     # Test single epoch (quick)
-    print("   ⏳ Running quick training test...")
+    print("   [hourglass] Running quick training test...")
     history = trainer.train()
 
     assert 'train_loss' in history, "Training history missing train_loss"
@@ -170,7 +170,7 @@ print("\n📚 Documentation:")
 print("  - ENHANCEMENTS.md: Complete guide to all new features")
 print("  - Updated requirements.txt with prometheus-client")
 
-print("\n🚀 Next Steps:")
+print("\n[rocket.fill] Next Steps:")
 print("  1. Install prometheus-client if needed:")
 print("     pip install prometheus-client==0.19.0")
 print("  2. Read ENHANCEMENTS.md for usage examples")
@@ -178,5 +178,5 @@ print("  3. Try advanced trainer for 2-3x faster training!")
 print("  4. Create ensembles for +2-5% accuracy boost")
 
 print("\n" + "=" * 80)
-print("✨ ALL ENHANCEMENTS READY FOR PRODUCTION USE! ✨")
+print("[sparkles] ALL ENHANCEMENTS READY FOR PRODUCTION USE! [sparkles]")
 print("=" * 80)

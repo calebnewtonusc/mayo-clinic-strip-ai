@@ -236,7 +236,7 @@ def main():
     print(f"\nBest Validation Accuracy: {best_metrics['val_acc']:.4f}")
     print(f"Best Validation Loss: {best_metrics['val_loss']:.4f}")
 
-    print(f"\n✅ Results saved to {output_dir}")
+    print(f"\n[checkmark.circle] Results saved to {output_dir}")
     print("\nNext steps:")
     print("1. Update your config file with best parameters")
     print("2. Train full model: python train.py --config config/default_config.yaml")

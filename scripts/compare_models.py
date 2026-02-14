@@ -181,7 +181,7 @@ def main():
                 save_path=output_dir / 'metrics_comparison.png'
             )
 
-    print(f"\n✅ Comparison complete! Results saved to {output_dir}")
+    print(f"\n[checkmark.circle] Comparison complete! Results saved to {output_dir}")
 
 
 if __name__ == '__main__':

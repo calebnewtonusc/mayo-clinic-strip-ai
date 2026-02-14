@@ -128,10 +128,10 @@ def generate_dummy_dataset(
     with open(info_path, 'w') as f:
         json.dump(dataset_info, f, indent=2)
 
-    print(f"\n✅ Dummy dataset generated successfully!")
+    print(f"\n[checkmark.circle] Dummy dataset generated successfully!")
     print(f"📁 Location: {output_dir}")
-    print(f"📊 Total patients: {dataset_info['num_patients']}")
-    print(f"📊 Total images: {sum(p['num_images'] for p in dataset_info['patients'].values())}")
+    print(f"[chart.bar.fill] Total patients: {dataset_info['num_patients']}")
+    print(f"[chart.bar.fill] Total images: {sum(p['num_images'] for p in dataset_info['patients'].values())}")
     print(f"ℹ️  Dataset info saved to: {info_path}")
 
 
@@ -163,7 +163,7 @@ def main():
         image_size=tuple(args.image_size)
     )
 
-    print("\n🚀 Next steps:")
+    print("\n[rocket.fill] Next steps:")
     print("1. Validate data: python scripts/validate_data.py --data_dir data/raw")
     print("2. Preprocess data: python scripts/preprocess_data.py")
     print("3. Create splits: python scripts/create_splits.py")

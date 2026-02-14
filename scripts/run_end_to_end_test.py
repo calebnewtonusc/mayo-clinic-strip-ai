@@ -9,18 +9,18 @@ import shutil
 def run_command(cmd, description):
     """Run a command and handle errors."""
     print(f"\n{'='*60}")
-    print(f"🔄 {description}")
+    print(f"[arrow.clockwise] {description}")
     print(f"{'='*60}")
     print(f"Command: {cmd}\n")
 
     result = subprocess.run(cmd, shell=True)
 
     if result.returncode != 0:
-        print(f"\n❌ FAILED: {description}")
+        print(f"\n[xmark.circle] FAILED: {description}")
         print(f"Command failed with return code {result.returncode}")
         return False
     else:
-        print(f"\n✅ SUCCESS: {description}")
+        print(f"\n[checkmark.circle] SUCCESS: {description}")
         return True
 
 
@@ -35,7 +35,7 @@ def main():
 
     # Check if we're in the right directory
     if not Path('src').exists() or not Path('scripts').exists():
-        print("❌ Error: Must run from project root directory")
+        print("[xmark.circle] Error: Must run from project root directory")
         print("cd to mayo-clinic-strip-ai/ first")
         sys.exit(1)
 
@@ -78,26 +78,26 @@ def main():
         success = run_command(step['cmd'], step['desc'])
         if not success:
             failed_steps.append(i)
-            print(f"\n⚠️  Step {i} failed, but continuing...")
+            print(f"\n[exclamationmark.triangle]  Step {i} failed, but continuing...")
 
     # Summary
     print(f"\n\n{'='*60}")
-    print("📊 TEST SUMMARY")
+    print("[chart.bar.fill] TEST SUMMARY")
     print(f"{'='*60}")
 
     if not failed_steps:
-        print("✅ ALL TESTS PASSED!")
+        print("[checkmark.circle] ALL TESTS PASSED!")
         print("\nThe entire pipeline is working correctly.")
         print("\nNext steps:")
         print("1. Replace dummy data with real medical images in data/raw/")
         print("2. Run preprocessing and splitting on real data")
         print("3. Start training: python train.py")
     else:
-        print(f"❌ {len(failed_steps)} step(s) failed: {failed_steps}")
+        print(f"[xmark.circle] {len(failed_steps)} step(s) failed: {failed_steps}")
         print("\nPlease check the error messages above.")
 
     print(f"\n📁 Test data location: {test_data_dir}")
-    print("💡 You can safely delete this directory when done testing")
+    print("[lightbulb.fill] You can safely delete this directory when done testing")
 
     return 0 if not failed_steps else 1
 

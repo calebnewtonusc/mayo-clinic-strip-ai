@@ -55,9 +55,9 @@ def main():
     )
 
     if exit_code == 0:
-        print("\n✅ All tests passed!")
+        print("\n[checkmark.circle] All tests passed!")
     else:
-        print("\n❌ Some tests failed")
+        print("\n[xmark.circle] Some tests failed")
 
     sys.exit(exit_code)
 

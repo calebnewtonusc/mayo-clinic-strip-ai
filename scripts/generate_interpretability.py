@@ -158,7 +158,7 @@ def generate_gradcam_visualizations(
 
         print(f"Saved {save_path}")
 
-    print(f"\n✅ Generated {len(indices)} {method_name} visualizations in {output_dir}")
+    print(f"\n[checkmark.circle] Generated {len(indices)} {method_name} visualizations in {output_dir}")
 
 
 def generate_feature_visualizations(
@@ -231,7 +231,7 @@ def generate_feature_visualizations(
     except:
         print("UMAP not available, skipping...")
 
-    print(f"\n✅ Generated feature visualizations in {output_dir}")
+    print(f"\n[checkmark.circle] Generated feature visualizations in {output_dir}")
 
 
 def main():
@@ -313,7 +313,7 @@ def main():
             output_dir=Path(args.output_dir) / "features"
         )
 
-    print("\n✅ All interpretability visualizations generated!")
+    print("\n[checkmark.circle] All interpretability visualizations generated!")
     print(f"📁 Results saved to: {args.output_dir}")
 
 

@@ -199,7 +199,7 @@ def plot_uncertainty_analysis(
     plt.savefig(output_dir / 'calibration_curve.png', dpi=150, bbox_inches='tight')
     plt.close()
 
-    print(f"\n✅ Saved uncertainty analysis plots to {output_dir}")
+    print(f"\n[checkmark.circle] Saved uncertainty analysis plots to {output_dir}")
 
 
 def main():
@@ -280,7 +280,7 @@ def main():
         tta_accuracy = (tta_predictions == tta_labels).mean()
         print(f"\nTTA Accuracy: {tta_accuracy:.4f}")
 
-    print(f"\n✅ Uncertainty analysis complete!")
+    print(f"\n[checkmark.circle] Uncertainty analysis complete!")
     print(f"📁 Results saved to: {args.output_dir}")
 
 
